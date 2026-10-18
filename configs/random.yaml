@@ -1,0 +1,3 @@
+# Configuration template for 'random' solver (to be populated by the phase owner)
+defaults: {}
+search_space: {}
