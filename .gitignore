@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.so
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+.env
+*.key
+*.pem
+
+# Ignore raw uncompressed experiment outputs (>5MB rule in Section 2.2)
+results/raw/*
+!results/raw/.gitkeep
+
+.DS_Store
+Thumbs.db
