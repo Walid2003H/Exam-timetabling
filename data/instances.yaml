@@ -4,6 +4,8 @@ groups:
     n_exams: 12
     n_slots: 6
     n_students: 60
+    courses_per_student: 3
+    n_cohorts: 2
     budget_fee: 20000
     instances:
       - name: tiny-a
@@ -17,6 +19,8 @@ groups:
     n_exams: 30
     n_slots: 10
     n_students: 300
+    courses_per_student: 4
+    n_cohorts: 3
     budget_fee: 50000
     instances:
       - name: small-a
@@ -30,6 +34,8 @@ groups:
     n_exams: 120
     n_slots: 18
     n_students: 1500
+    courses_per_student: 5
+    n_cohorts: 6
     budget_fee: 200000
     instances:
       - name: medium-a
@@ -43,6 +49,8 @@ groups:
     n_exams: 500
     n_slots: 35
     n_students: 6000
+    courses_per_student: 5
+    n_cohorts: 12
     budget_fee: 500000
     instances:
       - name: large-a
@@ -58,18 +66,24 @@ groups:
         n_exams: 30
         n_slots: 10
         n_students: 300
+        courses_per_student: 4
+        n_cohorts: 3
         budget_fee: 50000
         seed: 1003
       - name: tune-medium
         n_exams: 120
         n_slots: 18
         n_students: 1500
+        courses_per_student: 5
+        n_cohorts: 6
         budget_fee: 200000
         seed: 1003
       - name: tune-large
         n_exams: 500
         n_slots: 35
         n_students: 6000
+        courses_per_student: 5
+        n_cohorts: 12
         budget_fee: 500000
         seed: 1004
 
@@ -77,5 +91,8 @@ groups:
     optional: true
     instances:
       - name: car-s-91
+        n_slots: 35
       - name: sta-f-83
+        n_slots: 13
       - name: hec-s-92
+        n_slots: 18
