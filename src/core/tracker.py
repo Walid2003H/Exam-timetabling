@@ -10,65 +10,57 @@ import time
 
 import numpy as np
 
-from src.core.instance import Instance
-from src.core.problem import diversity, fitness, is_feasible
+from src.core.solver import Budget
 
 
 class Tracker:
     """Tracks optimization trajectory and records history snapshots."""
 
-    def __init__(self, inst: Instance, budget_max: float, sample_interval_ratio: float = 0.005) -> None:
-        """Initialize tracker."""
-        self.inst = inst
-        self.budget_max = float(budget_max)
-        self.interval = max(1.0, self.budget_max * float(sample_interval_ratio))
-        self._start_time = time.perf_counter()
+    def __init__(self, budget: Budget, step_fraction: float = 0.005) -> None:
+        """Initialize tracker with a budget and sampling step fraction.
 
-        self.best_f = float("inf")
-        self.best_x: np.ndarray | None = None
-        self.best_feasible = False
+        Args:
+            budget: Shared Budget tracker instance.
+            step_fraction: Fraction of budget between history snapshots (default 0.5%).
+        """
+        self.budget = budget
+        self.step_fraction = float(step_fraction)
+        self.max_evals = budget.max_evals
+        self.interval = max(1.0, self.max_evals * self.step_fraction)
+        self._start_time = time.perf_counter()
 
         self._next_checkpoint = 0.0
         self._history_records: list[list[float]] = []
 
-    def update(
+    def record(
         self,
-        evals_used: float,
         iteration: int,
-        population_or_solution: np.ndarray,
+        best_f_so_far: float,
+        diversity: float,
+        force: bool = False,
     ) -> None:
-        """Evaluate current population or solution and record snapshot if interval reached."""
-        arr = np.asarray(population_or_solution)
-        if arr.ndim == 1:
-            pop = arr.reshape(1, -1)
-        elif arr.ndim == 2:
-            pop = arr
-        else:
-            raise ValueError("Tracker update expects 1D or 2D NumPy array.")
+        """Record a history snapshot if interval reached or forced.
 
-        for x in pop:
-            if is_feasible(self.inst, x):
-                f_val = fitness(self.inst, x, lam=0.0)
-                if f_val < self.best_f:
-                    self.best_f = f_val
-                    self.best_x = np.array(x, dtype=np.int32)
-                    self.best_feasible = True
+        Args:
+            iteration: Current algorithm iteration index.
+            best_f_so_far: Best objective value discovered so far.
+            diversity: Population diversity score.
+            force: If True, forces recording regardless of budget interval.
+        """
+        evals_used = self.budget.used
+        elapsed = time.perf_counter() - self._start_time
 
-        if evals_used >= self._next_checkpoint or evals_used >= self.budget_max:
-            elapsed = time.perf_counter() - self._start_time
-            div_val = diversity(pop) if pop.shape[0] > 1 else 0.0
-            recorded_f = self.best_f if self.best_feasible else float("inf")
-
+        if force or evals_used >= self._next_checkpoint or evals_used >= self.max_evals:
             self._history_records.append([
                 float(evals_used),
                 float(iteration),
-                float(recorded_f),
+                float(best_f_so_far),
                 float(elapsed),
-                float(div_val),
+                float(diversity),
             ])
             self._next_checkpoint = evals_used + self.interval
 
-    def get_history(self) -> np.ndarray:
+    def to_array(self) -> np.ndarray:
         """Return history records as a 2D numpy array of shape (num_snapshots, 5)."""
         if not self._history_records:
             return np.zeros((0, 5), dtype=np.float64)
