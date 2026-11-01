@@ -1,3 +1,9 @@
-# Configuration template for 'random' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for 'random' baseline solver (P4)
+defaults:
+  use_repair: true
+  max_repair_passes: 5
+  diversity_window: 10
+
+search_space:
+  use_repair: [true]
+  max_repair_passes: [3, 5, 10]

@@ -1,3 +1,11 @@
-# Configuration template for 'dsatur' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for 'dsatur' constructive heuristic solver (P4)
+defaults:
+  slot_selection: min_proximity
+  use_repair: true
+  polish_with_move_ls: false
+  max_restarts: 200
+
+search_space:
+  slot_selection: [min_proximity, random_feasible]
+  polish_with_move_ls: [false, true]
+  max_restarts: [50, 100, 200]

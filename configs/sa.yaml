@@ -1,3 +1,17 @@
-# Configuration template for 'sa' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for 'sa' Simulated Annealing solver (P4)
+defaults:
+  initial_temp: 1.5
+  final_temp: 0.002
+  alpha: 0.96
+  epoch_length: 80
+  kempe_prob: 0.25
+  warm_starts: 3
+  reheat_factor: 1.8
+  stagnation_epochs: 35
+  penalty_weight: 1000.0
+
+search_space:
+  initial_temp: [0.8, 1.5, 3.0]
+  alpha: [0.94, 0.96, 0.98]
+  epoch_length: [50, 80, 120]
+  kempe_prob: [0.10, 0.25, 0.40]

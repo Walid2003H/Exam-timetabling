@@ -1,3 +1,9 @@
-# Configuration template for 'exact' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for 'exact' Branch & Bound solver (P4)
+defaults:
+  max_exams_exact: 20
+  warm_start_restarts: 8
+  time_limit_seconds: 30.0
+
+search_space:
+  warm_start_restarts: [4, 8, 16]
+  time_limit_seconds: [15.0, 30.0]
