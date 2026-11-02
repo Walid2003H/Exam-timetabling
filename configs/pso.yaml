@@ -1,3 +1,26 @@
-# Configuration template for 'pso' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for pure Particle Swarm Optimization solver 'pso' (P6)
+defaults:
+  swarm_size: 20
+  encoding: random_keys
+  decode_mode: priority_greedy
+  w_max: 0.78
+  w_min: 0.42
+  c1: 1.49
+  c2: 1.49
+  v_max: 0.35
+  mutation_rate: 0.03
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 15
+  use_local_search: false
+
+search_space:
+  swarm_size: [16, 20, 28]
+  encoding: [random_keys, direct_discrete]
+  w_max: [0.70, 0.78, 0.85]
+  w_min: [0.35, 0.42, 0.50]
+  c1: [1.20, 1.49, 1.80]
+  c2: [1.20, 1.49, 1.80]
+  mutation_rate: [0.01, 0.03, 0.06]

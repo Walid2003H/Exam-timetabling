@@ -1,3 +1,30 @@
-# Configuration template for 'pso_memetic' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for Memetic Particle Swarm Optimization solver 'pso_memetic' (P6)
+defaults:
+  swarm_size: 20
+  encoding: random_keys
+  decode_mode: priority_greedy
+  w_max: 0.75
+  w_min: 0.40
+  c1: 1.49
+  c2: 1.49
+  v_max: 0.35
+  mutation_rate: 0.03
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 12
+  use_local_search: true
+  ls_operator: hybrid
+  ls_top_k: 1
+  ls_max_passes: 1
+  ls_kempe_steps: 10
+  ls_swap_trials: 10
+
+search_space:
+  swarm_size: [16, 20, 28]
+  encoding: [random_keys, direct_discrete]
+  ls_operator: [move, kempe, hybrid]
+  ls_top_k: [1, 2]
+  ls_kempe_steps: [10, 20, 30]
+  mutation_rate: [0.02, 0.04]
