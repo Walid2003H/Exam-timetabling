@@ -1,0 +1,81 @@
+# Instance specifications and fixed generation seeds (Section 3.4)
+groups:
+  tiny:
+    n_exams: 12
+    n_slots: 6
+    n_students: 60
+    budget_fee: 20000
+    instances:
+      - name: tiny-a
+        seed: 1000
+      - name: tiny-b
+        seed: 1001
+      - name: tiny-c
+        seed: 1002
+
+  small:
+    n_exams: 30
+    n_slots: 10
+    n_students: 300
+    budget_fee: 50000
+    instances:
+      - name: small-a
+        seed: 1000
+      - name: small-b
+        seed: 1001
+      - name: small-c
+        seed: 1002
+
+  medium:
+    n_exams: 120
+    n_slots: 18
+    n_students: 1500
+    budget_fee: 200000
+    instances:
+      - name: medium-a
+        seed: 1000
+      - name: medium-b
+        seed: 1001
+      - name: medium-c
+        seed: 1002
+
+  large:
+    n_exams: 500
+    n_slots: 35
+    n_students: 6000
+    budget_fee: 500000
+    instances:
+      - name: large-a
+        seed: 1000
+      - name: large-b
+        seed: 1001
+      - name: large-c
+        seed: 1002
+
+  tuning:
+    instances:
+      - name: tune-small
+        n_exams: 30
+        n_slots: 10
+        n_students: 300
+        budget_fee: 50000
+        seed: 1003
+      - name: tune-medium
+        n_exams: 120
+        n_slots: 18
+        n_students: 1500
+        budget_fee: 200000
+        seed: 1003
+      - name: tune-large
+        n_exams: 500
+        n_slots: 35
+        n_students: 6000
+        budget_fee: 500000
+        seed: 1004
+
+  toronto:
+    optional: true
+    instances:
+      - name: car-s-91
+      - name: sta-f-83
+      - name: hec-s-92
