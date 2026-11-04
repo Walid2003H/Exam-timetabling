@@ -2,53 +2,44 @@
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from src.algorithms.aco import (
+    ACOMemeticSolver,
+    ACOSolver,
+    compute_mmas_bounds,
+    construct_ant_timetable,
+    update_mmas_pheromones,
+)
+from src.algorithms.ga import (
+    GAMemeticSolver,
+    GASolver,
+    MemeticGASolver,
+    crossover_chromosomes,
+    mutate_chromosome,
+    tournament_select,
+)
+from src.algorithms.pso import (
+    PSOMemeticSolver,
+    PSOSolver,
+    decode_random_keys,
+    encode_slots_to_keys,
+    update_direct_discrete_particle,
+)
 
-try:
-    from src.algorithms.ga import GAMemeticSolver, GASolver
-
-    __all__.extend(["GAMemeticSolver", "GASolver"])
-except ImportError:  # pragma: no cover
-    pass
-
-try:
-    from src.algorithms.pso import (
-        PSOMemeticSolver,
-        PSOSolver,
-        decode_random_keys,
-        encode_slots_to_keys,
-        update_direct_discrete_particle,
-    )
-
-    __all__.extend(
-        [
-            "PSOMemeticSolver",
-            "PSOSolver",
-            "decode_random_keys",
-            "encode_slots_to_keys",
-            "update_direct_discrete_particle",
-        ]
-    )
-except ImportError:  # pragma: no cover
-    pass
-
-try:
-    from src.algorithms.aco import (
-        ACOMemeticSolver,
-        ACOSolver,
-        compute_mmas_bounds,
-        construct_ant_timetable,
-        update_mmas_pheromones,
-    )
-
-    __all__.extend(
-        [
-            "ACOMemeticSolver",
-            "ACOSolver",
-            "compute_mmas_bounds",
-            "construct_ant_timetable",
-            "update_mmas_pheromones",
-        ]
-    )
-except ImportError:  # pragma: no cover
-    pass
+__all__ = [
+    "ACOMemeticSolver",
+    "ACOSolver",
+    "GAMemeticSolver",
+    "GASolver",
+    "MemeticGASolver",
+    "PSOMemeticSolver",
+    "PSOSolver",
+    "compute_mmas_bounds",
+    "construct_ant_timetable",
+    "crossover_chromosomes",
+    "decode_random_keys",
+    "encode_slots_to_keys",
+    "mutate_chromosome",
+    "tournament_select",
+    "update_direct_discrete_particle",
+    "update_mmas_pheromones",
+]

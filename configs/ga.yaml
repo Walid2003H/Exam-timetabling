@@ -1,3 +1,21 @@
-# Configuration template for 'ga' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for pure Genetic Algorithm solver 'ga' (P5)
+defaults:
+  pop_size: 24
+  tournament_size: 3
+  crossover_rate: 0.85
+  crossover_type: uniform
+  mutation_rate: 0.04
+  elitism_count: 2
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_generations: 14
+  use_local_search: false
+
+search_space:
+  pop_size: [16, 24, 36]
+  tournament_size: [2, 3, 5]
+  crossover_rate: [0.75, 0.85, 0.95]
+  crossover_type: [uniform, two_point]
+  mutation_rate: [0.02, 0.04, 0.08]
