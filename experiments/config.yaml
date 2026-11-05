@@ -1,0 +1,14 @@
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] # 30 بذرة
+budget:
+  max_evals: 20000 
+  max_seconds: null
+algorithms:
+  - random
+  - dsatur
+  - ga
+  - pso
+  - aco
+  
+instances:
+  - {name: "tiny-a", path: "data/generated/tiny-a.npz"}
+  - {name: "small-a", path: "data/generated/small-a.npz"}
