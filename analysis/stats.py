@@ -69,5 +69,23 @@ def analyze_results(csv_path: str):
     print(f"\nTables saved to {out_dir}/")
 
 if __name__ == "__main__":
-    # تأكد من أن اسم الملف يطابق ما أنتجه run.py
-    analyze_results('results/raw/full_run.csv')
+    raw_dir = Path('results/raw')
+    # البحث عن جميع ملفات CSV في المجلد
+    all_files = list(raw_dir.glob('*.csv'))
+    
+    # استبعاد الملف المدمج إذا كان موجوداً من تشغيل سابق
+    all_files = [f for f in all_files if f.name != 'combined_for_analysis.csv']
+    
+    if not all_files:
+        print("No CSV files found in results/raw/")
+    else:
+        if len(all_files) == 1:
+            analyze_results(str(all_files[0]))
+        else:
+            # دمج جميع الملفات في ملف واحد
+            dfs = [pd.read_csv(f) for f in all_files]
+            combined_df = pd.concat(dfs, ignore_index=True)
+            combined_path = raw_dir / 'combined_for_analysis.csv'
+            combined_df.to_csv(combined_path, index=False)
+            print(f"Merged {len(all_files)} files into combined_for_analysis.csv")
+            analyze_results(str(combined_path))

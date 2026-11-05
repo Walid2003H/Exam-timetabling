@@ -128,11 +128,15 @@ def main():
                 }
                 results.append(row)
 
-    # 5. حفظ النتائج في مجلد results/raw
+      # 5. حفظ النتائج في مجلد results/raw باسم ديناميكي
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    n_seeds = len(config['seeds'])
+    budget_val = config['budget']['max_evals']
+    filename = f"run_{timestamp}_{int(budget_val)}fee_{n_seeds}seeds.csv"
+    
     out_dir = Path('results/raw')
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / 'full_run.csv'
-    
+    out_file = out_dir / filename
     with open(out_file, 'w', newline='', encoding='utf-8') as f:
         if results:
             writer = csv.DictWriter(f, fieldnames=results[0].keys())
