@@ -49,7 +49,7 @@ groups:
     n_exams: 500
     n_slots: 35
     n_students: 6000
-    courses_per_student: 5
+    courses_per_student: 4
     n_cohorts: 12
     budget_fee: 500000
     instances:
@@ -82,7 +82,7 @@ groups:
         n_exams: 500
         n_slots: 35
         n_students: 6000
-        courses_per_student: 5
+        courses_per_student: 4
         n_cohorts: 12
         budget_fee: 500000
         seed: 1004

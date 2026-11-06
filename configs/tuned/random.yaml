@@ -1,0 +1,12 @@
+defaults:
+  use_repair: true
+  max_repair_passes: 5
+  diversity_window: 10
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 30.6017

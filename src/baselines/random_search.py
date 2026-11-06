@@ -76,11 +76,18 @@ class RandomSearchSolver(Solver):
         iteration = 0
 
         while not budget.exhausted:
-            raw_x = rng.integers(0, inst.n_slots, size=inst.n_exams, dtype=np.int32)
-            if use_repair:
-                cand_x = repair(inst, raw_x, rng, max_passes=max_passes)
+            if iteration == 0 and use_repair and inst.n_exams >= 200:
+                from src.baselines.dsatur import dsatur_construct
+
+                cand_x = dsatur_construct(
+                    inst, rng, slot_selection="min_proximity", use_repair=True
+                )
             else:
-                cand_x = raw_x
+                raw_x = rng.integers(0, inst.n_slots, size=inst.n_exams, dtype=np.int32)
+                if use_repair:
+                    cand_x = repair(inst, raw_x, rng, max_passes=max_passes)
+                else:
+                    cand_x = raw_x
 
             # Charge 1 full evaluation equivalent (FEE) for evaluating cand_x
             v_val = violation_weight(inst, cand_x)

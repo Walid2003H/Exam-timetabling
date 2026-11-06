@@ -121,7 +121,6 @@ def test_diversity_invariants() -> None:
 
 def test_budget_and_tracker_checkpoints() -> None:
     """Verify FEE budget charging, exhaustion, and Tracker 0.5% interval snapshots."""
-    inst = load_instance("tiny-a")
     budget = Budget(max_evals=100.0)
     tracker = Tracker(budget, step_fraction=0.10)  # every 10 FEE
 

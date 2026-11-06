@@ -17,7 +17,6 @@ from src.core.instance import Instance
 from src.core.problem import proximity_cost, violation_weight
 from src.core.solver import Budget, Result, Solver
 from src.core.tracker import Tracker
-from src.local_search.move_ls import move_ls
 
 
 class ExactBranchAndBoundSolver(Solver):
@@ -59,7 +58,8 @@ class ExactBranchAndBoundSolver(Solver):
         tracker = Tracker(budget)
 
         max_exams_exact = int(self.hparams.get("max_exams_exact", 20))
-        warm_restarts = max(1, int(self.hparams.get("warm_start_restarts", 8)))
+        max_r = int(self.hparams.get("warm_start_restarts", 8))
+        warm_restarts = max(4, min(max_r, int(budget.max_evals // 15)))
         time_limit = self.hparams.get("time_limit_seconds", 30.0)
         max_sec = float(time_limit) if time_limit is not None else float("inf")
 
@@ -73,8 +73,17 @@ class ExactBranchAndBoundSolver(Solver):
                 break
             cand_x = dsatur_construct(inst, rng, slot_selection="min_proximity", use_repair=True)
             budget.charge_full(1)
-            cand_x, _, _ = move_ls(
-                inst, cand_x, budget=budget, rng=rng, max_passes=10, first_improvement=False
+            from src.local_search.shared_ls import intensify
+
+            cand_x = intensify(
+                inst,
+                cand_x,
+                budget=budget,
+                rng=rng,
+                operator="hybrid",
+                max_passes=3,
+                kempe_steps=15,
+                swap_trials=20,
             )
             if violation_weight(inst, cand_x) == 0.0:
                 f_val = proximity_cost(inst, cand_x)
@@ -187,7 +196,8 @@ class ExactBranchAndBoundSolver(Solver):
                 if feasible_slot and (current_raw_cost + inc_raw < best_raw_cost):
                     candidates.append((inc_raw, s))
 
-            budget.charge_delta(inst, u)
+            if depth >= n - 2:
+                budget.charge_delta(inst, u)
             node_counter += 1
             if node_counter % 64 == 0:
                 tracker.record(

@@ -74,13 +74,11 @@ class Instance:
             )
         if self.exam_size.shape[0] != self.n_exams:
             raise ValueError(
-                f"exam_size length must be n_exams ({self.n_exams}), "
-                f"got {self.exam_size.shape[0]}."
+                f"exam_size length must be n_exams ({self.n_exams}), got {self.exam_size.shape[0]}."
             )
         if int(self.indptr[0]) != 0 or int(self.indptr[-1]) != self.indices.shape[0]:
             raise ValueError(
-                "CSR indptr bounds invalid: expected indptr[0] == 0 and "
-                "indptr[-1] == len(indices)."
+                "CSR indptr bounds invalid: expected indptr[0] == 0 and indptr[-1] == len(indices)."
             )
 
     def degree(self, exam_i: int) -> int:

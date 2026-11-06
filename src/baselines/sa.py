@@ -98,8 +98,8 @@ class SimulatedAnnealingSolver(Solver):
         cur_f: float = float("inf")
 
         # Warm-start from the best of `warm_starts` DSATUR + repair constructions
-        for _ in range(warm_starts):
-            if budget.exhausted:
+        for w_i in range(max(warm_starts, 8)):
+            if budget.exhausted or (w_i >= warm_starts and best_feasible_x is not None):
                 break
             cand_x = dsatur_construct(inst, rng, slot_selection="min_proximity", use_repair=True)
             v_val = violation_weight(inst, cand_x)

@@ -1,0 +1,24 @@
+defaults:
+  swarm_size: 20
+  encoding: random_keys
+  decode_mode: priority_greedy
+  w_max: 0.78
+  w_min: 0.42
+  c1: 1.49
+  c2: 1.49
+  v_max: 0.35
+  mutation_rate: 0.03
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 15
+  use_local_search: false
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 30.1717

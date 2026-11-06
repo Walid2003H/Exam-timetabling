@@ -25,6 +25,7 @@ from src.core.instance import Instance
 from src.core.problem import (
     delta_move,
     diversity,
+    get_proximity_kernel,
     proximity_cost,
     repair,
     violation_weight,
@@ -170,23 +171,20 @@ def construct_ant_timetable(
     degrees = np.diff(indptr)
     tie_noise = rng.random(n_exams)
 
-    nbr_slot_used = np.zeros((n_exams, n_slots), dtype=bool)
+    slot_table = np.zeros((n_exams, n_slots), dtype=np.int32)
     sat_deg = np.zeros(n_exams, dtype=np.int32)
     norm_s = float(max(1, inst.n_students))
+    k_prox = get_proximity_kernel(inst)
 
     for _ in range(n_exams):
-        # Select next unassigned exam with highest (saturation_degree, static_degree, noise)
         scores = np.where(unassigned, sat_deg * 1000000.0 + degrees * 100.0 + tie_noise, -1.0)
         u = int(np.argmax(scores))
 
-        nbrs = indices[indptr[u] : indptr[u + 1]]
-        wts = weights[indptr[u] : indptr[u + 1]]
-        assigned_mask = ~unassigned[nbrs]
-        used_nbr_slots = x[nbrs[assigned_mask]]
-        used_nbr_wts = wts[assigned_mask]
+        row = slot_table[u]
+        min_c = int(np.min(row))
+        cand_slots = np.flatnonzero(row == min_c)
 
-        if used_nbr_slots.shape[0] == 0:
-            # No neighbours scheduled yet: sample purely from pheromone trail tau[u]
+        if cand_slots.shape[0] == n_slots and int(sat_deg[u]) == 0:
             probs = np.power(np.maximum(tau[u], 1e-12), alpha)
             total_p = float(np.sum(probs))
             if total_p <= 0.0:
@@ -194,45 +192,32 @@ def construct_ant_timetable(
             else:
                 probs /= total_p
                 chosen_slot = int(rng.choice(n_slots, p=probs))
+        elif cand_slots.shape[0] == 1:
+            chosen_slot = int(cand_slots[0])
         else:
-            slot_conf = np.bincount(used_nbr_slots, weights=used_nbr_wts, minlength=n_slots)
-            min_c = np.min(slot_conf)
-            cand_slots = np.flatnonzero(slot_conf == min_c)
+            prox_sums = (k_prox[cand_slots] @ row) / norm_s
+            eta_vals = 1.0 / (1.0 + prox_sums)
+            tau_vals = np.maximum(tau[u, cand_slots], 1e-12)
 
-            if cand_slots.shape[0] == 1:
-                chosen_slot = int(cand_slots[0])
+            desirability = np.power(tau_vals, alpha) * np.power(eta_vals, beta)
+            if rng.random() < q0:
+                chosen_slot = int(cand_slots[int(np.argmax(desirability))])
             else:
-                # Compute Carter proximity penalty on candidate minimum-conflict slots
-                diffs = np.abs(cand_slots[:, None] - used_nbr_slots[None, :])
-                prox_mask = (diffs >= 1) & (diffs <= 5)
-                prox_pen = np.where(
-                    prox_mask,
-                    (1 << np.clip(5 - diffs, 0, 5)) * used_nbr_wts[None, :],
-                    0,
-                )
-                prox_sums = np.sum(prox_pen, axis=1).astype(np.float64) / norm_s
-                eta_vals = 1.0 / (1.0 + prox_sums)
-                tau_vals = np.maximum(tau[u, cand_slots], 1e-12)
-
-                desirability = np.power(tau_vals, alpha) * np.power(eta_vals, beta)
-                if rng.random() < q0:
-                    chosen_slot = int(cand_slots[int(np.argmax(desirability))])
+                sum_d = float(np.sum(desirability))
+                if sum_d <= 0.0 or not np.isfinite(sum_d):
+                    chosen_slot = int(cand_slots[int(rng.integers(0, cand_slots.shape[0]))])
                 else:
-                    sum_d = float(np.sum(desirability))
-                    if sum_d <= 0.0 or not np.isfinite(sum_d):
-                        chosen_slot = int(cand_slots[int(rng.integers(0, cand_slots.shape[0]))])
-                    else:
-                        probs = desirability / sum_d
-                        chosen_slot = int(rng.choice(cand_slots, p=probs))
+                    probs = desirability / sum_d
+                    chosen_slot = int(rng.choice(cand_slots, p=probs))
 
         x[u] = chosen_slot
         unassigned[u] = False
 
-        # Increment saturation degree for unscheduled neighbours of u
-        unassigned_nbrs = nbrs[unassigned[nbrs]]
-        new_sat = unassigned_nbrs[~nbr_slot_used[unassigned_nbrs, chosen_slot]]
-        nbr_slot_used[new_sat, chosen_slot] = True
-        sat_deg[new_sat] += 1
+        nbrs = indices[indptr[u] : indptr[u + 1]]
+        wts = weights[indptr[u] : indptr[u + 1]]
+        newly_sat = nbrs[unassigned[nbrs] & (slot_table[nbrs, chosen_slot] == 0)]
+        sat_deg[newly_sat] += 1
+        slot_table[nbrs, chosen_slot] += wts
 
     return x
 
