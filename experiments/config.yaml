@@ -1,0 +1,8 @@
+seeds: [0, 1, 2, 3, 4] # 5 بذور فقط
+budget:
+  max_evals: 5000 # 5 آلاف فقط
+  max_seconds: null
+algorithms:
+  - ga_memetic
+instances:
+  - {name: "large-a", path: "data/generated/large-a.npz"}
