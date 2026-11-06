@@ -1,0 +1,21 @@
+defaults:
+  pop_size: 24
+  tournament_size: 3
+  crossover_rate: 0.85
+  crossover_type: uniform
+  mutation_rate: 0.04
+  elitism_count: 2
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_generations: 14
+  use_local_search: false
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 30.925

@@ -1,0 +1,8 @@
+defaults:
+  max_exams_exact: 20
+  warm_start_restarts: 8
+  time_limit_seconds: 30.0
+tuned_on: tiny-a
+seeds:
+- 1000
+- 1001

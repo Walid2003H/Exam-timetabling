@@ -1,0 +1,29 @@
+defaults:
+  swarm_size: 16
+  encoding: direct_discrete
+  decode_mode: priority_greedy
+  w_max: 0.75
+  w_min: 0.4
+  c1: 1.49
+  c2: 1.49
+  v_max: 0.35
+  mutation_rate: 0.02
+  dsatur_init_ratio: 0.35
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 12
+  use_local_search: true
+  ls_operator: kempe
+  ls_top_k: 1
+  ls_max_passes: 1
+  ls_kempe_steps: 30
+  ls_swap_trials: 10
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 29.9617

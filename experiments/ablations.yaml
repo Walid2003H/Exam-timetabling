@@ -1,0 +1,35 @@
+# Ablation study specification (P8 & P5/P6/P7 — Section 3.1 & 3.4)
+seeds: [0, 1, 2, 3, 4]
+quick_seeds: [0, 1]
+
+instances:
+  - {name: "tiny-a", group: "tiny", path: "data/generated/tiny-a.npz", fee: 160}
+  - {name: "small-a", group: "small", path: "data/generated/small-a.npz", fee: 240}
+  - {name: "medium-a", group: "medium", path: "data/generated/medium-a.npz", fee: 240}
+
+studies:
+  - study_name: "constraint_handling"
+    description: "Greedy conflict repair vs exterior penalty function F(x) = f(x) + 1000 * V(x) / S"
+    variants:
+      - {label: "ga_repair", solver: "ga", hparams: {constraint_handling: "repair"}}
+      - {label: "ga_penalty", solver: "ga", hparams: {constraint_handling: "penalty"}}
+      - {label: "pso_repair", solver: "pso", hparams: {constraint_handling: "repair", decode_mode: "slot_map"}}
+      - {label: "pso_penalty", solver: "pso", hparams: {constraint_handling: "penalty", decode_mode: "slot_map"}}
+      - {label: "aco_repair", solver: "aco", hparams: {constraint_handling: "repair"}}
+      - {label: "aco_penalty", solver: "aco", hparams: {constraint_handling: "penalty"}}
+
+  - study_name: "memetic_local_search"
+    description: "Pure population metaheuristics vs Memetic local search hybridization (intensify)"
+    variants:
+      - {label: "ga_pure", solver: "ga", hparams: {use_local_search: false}}
+      - {label: "ga_memetic", solver: "ga_memetic", hparams: {use_local_search: true}}
+      - {label: "pso_pure", solver: "pso", hparams: {use_local_search: false}}
+      - {label: "pso_memetic", solver: "pso_memetic", hparams: {use_local_search: true}}
+      - {label: "aco_pure", solver: "aco", hparams: {use_local_search: false}}
+      - {label: "aco_memetic", solver: "aco_memetic", hparams: {use_local_search: true}}
+
+  - study_name: "pso_encoding"
+    description: "Continuous Random-Keys priority decoding vs Direct Discrete slot inheritance"
+    variants:
+      - {label: "pso_random_keys", solver: "pso", hparams: {encoding: "random_keys"}}
+      - {label: "pso_direct_discrete", solver: "pso", hparams: {encoding: "direct_discrete"}}

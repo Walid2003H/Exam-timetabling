@@ -27,6 +27,7 @@ from src.baselines.dsatur import dsatur_construct
 from src.core.instance import Instance
 from src.core.problem import (
     diversity,
+    get_proximity_kernel,
     proximity_cost,
     repair,
     violation_weight,
@@ -80,41 +81,29 @@ def decode_random_keys(
     order = np.argsort(-priority, kind="mergesort")
 
     x = np.full(n_exams, -1, dtype=np.int32)
+    slot_table = np.zeros((n_exams, n_slots), dtype=np.int32)
+    k_prox = get_proximity_kernel(inst)
+
     for u_raw in order:
         u = int(u_raw)
+        row = slot_table[u]
+        min_c = int(np.min(row))
+        cand_slots = np.flatnonzero(row == min_c)
+
+        if cand_slots.shape[0] == n_slots:
+            frac = float(keys[u] * n_slots) - int(keys[u] * n_slots)
+            chosen_slot = min(n_slots - 1, max(0, int(frac * n_slots)))
+        elif cand_slots.shape[0] == 1:
+            chosen_slot = int(cand_slots[0])
+        else:
+            key_bias = np.abs(cand_slots / float(n_slots) - float(keys[u])) * 1e-2
+            scores = (k_prox[cand_slots] @ row) + key_bias + rng.random(cand_slots.shape[0]) * 1e-4
+            chosen_slot = int(cand_slots[int(np.argmin(scores))])
+
+        x[u] = chosen_slot
         nbrs = indices[indptr[u] : indptr[u + 1]]
         wts = weights[indptr[u] : indptr[u + 1]]
-        assigned_mask = x[nbrs] >= 0
-
-        if not np.any(assigned_mask):
-            # Use fractional part of the key to pick an initial slot deterministically
-            frac = float(keys[u] * n_slots) - int(keys[u] * n_slots)
-            x[u] = min(n_slots - 1, max(0, int(frac * n_slots)))
-            continue
-
-        used_nbr_slots = x[nbrs[assigned_mask]]
-        used_nbr_wts = wts[assigned_mask]
-
-        # Count hard conflict weight in each slot
-        slot_conf = np.bincount(used_nbr_slots, weights=used_nbr_wts, minlength=n_slots)
-        min_c = np.min(slot_conf)
-        cand_slots = np.flatnonzero(slot_conf == min_c)
-
-        if cand_slots.shape[0] == 1:
-            x[u] = int(cand_slots[0])
-        else:
-            # Choose candidate slot minimizing Carter proximity penalty
-            diffs = np.abs(cand_slots[:, None] - used_nbr_slots[None, :])
-            prox_mask = (diffs >= 1) & (diffs <= 5)
-            prox_pen = np.where(
-                prox_mask,
-                (1 << np.clip(5 - diffs, 0, 5)) * used_nbr_wts[None, :],
-                0,
-            )
-            # Small key-derived offset breaks ties smoothly
-            key_bias = np.abs(cand_slots / float(n_slots) - float(keys[u])) * 1e-2
-            scores = np.sum(prox_pen, axis=1) + key_bias + rng.random(cand_slots.shape[0]) * 1e-4
-            x[u] = int(cand_slots[int(np.argmin(scores))])
+        slot_table[nbrs, chosen_slot] += wts
 
     return x
 

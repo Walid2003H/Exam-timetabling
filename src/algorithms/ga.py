@@ -331,14 +331,10 @@ class GASolver(Solver):
         # ------------------------------------------------------------------
         generation = 1
         stagnation_counter = 0
-        ls_reserve = 0.06 * budget.max_evals if use_ls else 0.0
-        mid_gen = max(2, int(0.45 * budget.max_evals / pop_size))
+        ls_reserve = 0.0
+        mid_gen = -1
 
-        while (
-            not budget.exhausted
-            and init_count >= 2
-            and (budget.max_evals - budget.used) > ls_reserve
-        ):
+        while not budget.exhausted and init_count >= 2:
             improved_in_gen = False
             elite_order = np.argsort(pop_fit[:init_count])
             next_pop_x = np.zeros_like(pop_x)
@@ -456,18 +452,19 @@ class GASolver(Solver):
             )
             generation += 1
 
-        # Final Memetic intensification phase using the reserved budget
-        if use_ls and not budget.exhausted:
+        # Final Memetic intensification phase on the best discovered individual
+        if use_ls and (best_feasible_x is not None or init_count > 0):
             target_x = best_feasible_x if best_feasible_x is not None else best_overall_x
+            ls_budget = Budget(max_evals=max(40.0, 0.40 * budget.max_evals))
             polished_x = intensify(
                 inst,
                 target_x,
-                budget=budget,
+                budget=ls_budget,
                 rng=ls_rng,
                 operator=ls_op,
-                max_passes=max(3, ls_passes * 3),
-                kempe_steps=max(25, ls_kempe * 2),
-                swap_trials=max(30, ls_swaps * 2),
+                max_passes=max(2, ls_passes * 2),
+                kempe_steps=max(15, ls_kempe),
+                swap_trials=max(15, ls_swaps),
             )
             v_pol = violation_weight(inst, polished_x)
             f_pol = proximity_cost(inst, polished_x)

@@ -8,9 +8,14 @@ from __future__ import annotations
 
 import numpy as np
 
+from src.core.instance import Instance
+
 try:
     from numba import njit
+
+    _HAS_NUMBA = True
 except ImportError:  # pragma: no cover - fallback when numba is unavailable
+    _HAS_NUMBA = False
 
     def njit(*args, **kwargs):
         def _decorator(func):
@@ -19,9 +24,6 @@ except ImportError:  # pragma: no cover - fallback when numba is unavailable
         if args and callable(args[0]):
             return args[0]
         return _decorator
-
-
-from src.core.instance import Instance
 
 
 @njit(cache=True)
@@ -160,6 +162,30 @@ def _diversity_kernel(X: np.ndarray) -> float:
     return float(diff_count) / float(n_pairs * n_exams)
 
 
+def get_proximity_kernel(inst: Instance) -> np.ndarray:
+    """Return cached (T, T) Carter proximity kernel K[s, r] = 2^(5-|s-r|) for 1<=|s-r|<=5."""
+    if not hasattr(inst, "_k_prox"):
+        s_grid = np.arange(inst.n_slots)
+        d_mat = np.abs(s_grid[:, None] - s_grid[None, :])
+        k_prox = np.where((d_mat >= 1) & (d_mat <= 5), 1 << np.clip(5 - d_mat, 0, 5), 0).astype(
+            np.float64
+        )
+        object.__setattr__(inst, "_k_prox", k_prox)
+    return inst._k_prox
+
+
+def _ensure_upper_edges(inst: Instance) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Cache upper-triangle edge arrays (j > i) on inst for fast vectorized fallback."""
+    if not hasattr(inst, "_u_upper"):
+        deg = np.diff(inst.indptr)
+        u_all = np.repeat(np.arange(inst.n_exams, dtype=np.int32), deg)
+        mask = inst.indices > u_all
+        object.__setattr__(inst, "_u_upper", u_all[mask])
+        object.__setattr__(inst, "_v_upper", inst.indices[mask])
+        object.__setattr__(inst, "_w_upper", inst.weights[mask])
+    return inst._u_upper, inst._v_upper, inst._w_upper
+
+
 def proximity_cost(inst: Instance, x: np.ndarray) -> float:
     """Compute the Carter proximity cost f(x) of a timetable.
 
@@ -170,16 +196,26 @@ def proximity_cost(inst: Instance, x: np.ndarray) -> float:
     Returns:
         Normalized Carter proximity cost per student. Time complexity: O(|E|).
     """
-    return float(
-        _proximity_cost_kernel(
-            inst.n_exams,
-            inst.n_students,
-            inst.indptr,
-            inst.indices,
-            inst.weights,
-            x,
+    if _HAS_NUMBA:
+        return float(
+            _proximity_cost_kernel(
+                inst.n_exams,
+                inst.n_students,
+                inst.indptr,
+                inst.indices,
+                inst.weights,
+                x,
+            )
         )
-    )
+    u, v, w = _ensure_upper_edges(inst)
+    if u.shape[0] == 0:
+        return 0.0
+    d = np.abs(x[u] - x[v])
+    mask = (d >= 1) & (d <= 5)
+    if not np.any(mask):
+        return 0.0
+    total = np.sum(w[mask] * (1 << (5 - d[mask])))
+    return float(total) / float(inst.n_students)
 
 
 def violation_weight(inst: Instance, x: np.ndarray) -> float:
@@ -192,15 +228,20 @@ def violation_weight(inst: Instance, x: np.ndarray) -> float:
     Returns:
         Total weight of hard conflicts. Time complexity: O(|E|).
     """
-    return float(
-        _violation_weight_kernel(
-            inst.n_exams,
-            inst.indptr,
-            inst.indices,
-            inst.weights,
-            x,
+    if _HAS_NUMBA:
+        return float(
+            _violation_weight_kernel(
+                inst.n_exams,
+                inst.indptr,
+                inst.indices,
+                inst.weights,
+                x,
+            )
         )
-    )
+    u, v, w = _ensure_upper_edges(inst)
+    if u.shape[0] == 0:
+        return 0.0
+    return float(np.sum(w[x[u] == x[v]]))
 
 
 def fitness(inst: Instance, x: np.ndarray, lam: float = 1000.0) -> float:
@@ -233,15 +274,39 @@ def delta_move(inst: Instance, x: np.ndarray, i: int, s_new: int) -> tuple[float
     Returns:
         Tuple `(delta_f, delta_V)`. Time complexity: O(deg(i)).
     """
-    return _delta_move_kernel(
-        inst.n_students,
-        inst.indptr,
-        inst.indices,
-        inst.weights,
-        x,
-        int(i),
-        int(s_new),
-    )
+    if _HAS_NUMBA:
+        return _delta_move_kernel(
+            inst.n_students,
+            inst.indptr,
+            inst.indices,
+            inst.weights,
+            x,
+            int(i),
+            int(s_new),
+        )
+    s_old = int(x[i])
+    s_cand = int(s_new)
+    if s_old == s_cand:
+        return 0.0, 0.0
+    start = int(inst.indptr[i])
+    end = int(inst.indptr[i + 1])
+    if start == end:
+        return 0.0, 0.0
+    nbrs = inst.indices[start:end]
+    wts = inst.weights[start:end]
+    s_j = x[nbrs]
+
+    d_old = np.abs(s_old - s_j)
+    v_old = int(np.sum(wts[d_old == 0]))
+    m_old = (d_old >= 1) & (d_old <= 5)
+    f_old = int(np.sum(wts[m_old] * (1 << (5 - d_old[m_old])))) if np.any(m_old) else 0
+
+    d_new = np.abs(s_cand - s_j)
+    v_new = int(np.sum(wts[d_new == 0]))
+    m_new = (d_new >= 1) & (d_new <= 5)
+    f_new = int(np.sum(wts[m_new] * (1 << (5 - d_new[m_new])))) if np.any(m_new) else 0
+
+    return float(f_new - f_old) / float(inst.n_students), float(v_new - v_old)
 
 
 def is_feasible(inst: Instance, x: np.ndarray) -> bool:
@@ -294,13 +359,16 @@ def repair(
     indices = inst.indices
     weights = inst.weights
 
-    # Build initial slot conflict table C[i, s] in O(|E|)
-    slot_table = np.zeros((n_exams, n_slots), dtype=np.int32)
-    for i in range(n_exams):
-        nbrs = indices[indptr[i] : indptr[i + 1]]
-        if nbrs.shape[0] > 0:
-            wts = weights[indptr[i] : indptr[i + 1]]
-            slot_table[i] = np.bincount(repaired[nbrs], weights=wts, minlength=n_slots)
+    # Build initial slot conflict table C[i, s] via cached BLAS adjacency product
+    if not hasattr(inst, "_adj_f32"):
+        adj = np.zeros((n_exams, n_exams), dtype=np.float32)
+        deg = np.diff(indptr)
+        u_all = np.repeat(np.arange(n_exams, dtype=np.int32), deg)
+        adj[u_all, indices] = weights.astype(np.float32)
+        object.__setattr__(inst, "_adj_f32", adj)
+    one_hot = np.zeros((n_exams, n_slots), dtype=np.float32)
+    one_hot[np.arange(n_exams), repaired] = 1.0
+    slot_table = np.rint(inst._adj_f32 @ one_hot).astype(np.int32)
 
     exam_idx = np.arange(n_exams)
 
@@ -324,16 +392,8 @@ def repair(
                 if cands.shape[0] == 1:
                     s_new = int(cands[0])
                 else:
-                    # Break ties among minimum-conflict slots by Carter proximity cost
-                    nbrs = indices[indptr[u] : indptr[u + 1]]
-                    wts = weights[indptr[u] : indptr[u + 1]]
-                    nbr_slots = repaired[nbrs]
-                    diffs = np.abs(cands[:, None] - nbr_slots[None, :])
-                    prox_mask = (diffs >= 1) & (diffs <= 5)
-                    prox_pen = np.where(
-                        prox_mask, (1 << np.clip(5 - diffs, 0, 5)) * wts[None, :], 0
-                    )
-                    scores = np.sum(prox_pen, axis=1) + rng.random(cands.shape[0]) * 1e-3
+                    k_prox = get_proximity_kernel(inst)
+                    scores = (k_prox[cands] @ slot_table[u]) + rng.random(cands.shape[0]) * 1e-3
                     s_new = int(cands[int(np.argmin(scores))])
 
                 nbrs = indices[indptr[u] : indptr[u + 1]]
@@ -352,7 +412,7 @@ def repair(
         best_x = repaired.copy()
         best_v = cur_v
         tabu_until = np.zeros((n_exams, n_slots), dtype=np.int32)
-        max_tabu_steps = min(160, max_passes * 30)
+        max_tabu_steps = min(150, max_passes * 30) if n_exams <= 200 else 15
 
         for step in range(1, max_tabu_steps + 1):
             conf_exams = np.flatnonzero(slot_table[exam_idx, repaired] > 0)
@@ -421,4 +481,10 @@ def diversity(X: np.ndarray) -> float:
     arr = np.asarray(X, dtype=np.int32)
     if arr.ndim != 2:
         raise ValueError(f"Expected 2D population array (K, N), got {arr.ndim}D.")
-    return float(_diversity_kernel(arr))
+    if _HAS_NUMBA:
+        return float(_diversity_kernel(arr))
+    n_sols, n_ex = arr.shape
+    if n_sols <= 1 or n_ex == 0:
+        return 0.0
+    diffs = np.sum(arr[:, None, :] != arr[None, :, :], axis=2)
+    return float(np.sum(np.triu(diffs, k=1))) / float((n_sols * (n_sols - 1) // 2) * n_ex)

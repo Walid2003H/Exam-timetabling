@@ -17,6 +17,7 @@ import numpy as np
 from src.core.instance import Instance
 from src.core.problem import (
     diversity,
+    get_proximity_kernel,
     proximity_cost,
     repair,
     violation_weight,
@@ -65,52 +66,33 @@ def dsatur_construct(
     degrees = np.diff(indptr)
     tie_noise = rng.random(n_exams)
 
-    # Track which slots are used by neighbours of each exam: nbr_slot_used[i, s] = True
-    nbr_slot_used = np.zeros((n_exams, n_slots), dtype=bool)
+    # Maintain slot_table[i, s] = conflict weight of exam i with assigned neighbours in slot s
+    slot_table = np.zeros((n_exams, n_slots), dtype=np.int32)
     sat_deg = np.zeros(n_exams, dtype=np.int32)
+    k_prox = get_proximity_kernel(inst)
 
     for _ in range(n_exams):
-        # Select unassigned exam with highest (sat_deg, static_degree, tie_noise)
         scores = np.where(unassigned, sat_deg * 1000000.0 + degrees * 100.0 + tie_noise, -1.0)
         u = int(np.argmax(scores))
 
-        nbrs = indices[indptr[u] : indptr[u + 1]]
-        wts = weights[indptr[u] : indptr[u + 1]]
-        assigned_mask = ~unassigned[nbrs]
-        used_nbr_slots = x[nbrs[assigned_mask]]
-        used_nbr_wts = wts[assigned_mask]
+        row = slot_table[u]
+        min_c = int(np.min(row))
+        cand_slots = np.flatnonzero(row == min_c)
 
-        # Count conflict weight in each slot against already-assigned neighbours
-        slot_conf = np.bincount(used_nbr_slots, weights=used_nbr_wts, minlength=n_slots)
-        min_c = np.min(slot_conf)
-        cand_slots = np.flatnonzero(slot_conf == min_c)
-
-        if (
-            cand_slots.shape[0] == 1
-            or used_nbr_slots.shape[0] == 0
-            or slot_selection == "random_feasible"
-        ):
+        if cand_slots.shape[0] == 1 or slot_selection == "random_feasible":
             chosen_slot = int(cand_slots[int(rng.integers(0, cand_slots.shape[0]))])
         else:
-            # Among slots with minimum conflict, choose the one minimizing Carter proximity penalty
-            diffs = np.abs(cand_slots[:, None] - used_nbr_slots[None, :])
-            prox_mask = (diffs >= 1) & (diffs <= 5)
-            prox_pen = np.where(
-                prox_mask,
-                (1 << np.clip(5 - diffs, 0, 5)) * used_nbr_wts[None, :],
-                0,
-            )
-            prox_scores = np.sum(prox_pen, axis=1) + rng.random(cand_slots.shape[0]) * 1e-3
+            prox_scores = (k_prox[cand_slots] @ row) + rng.random(cand_slots.shape[0]) * 1e-3
             chosen_slot = int(cand_slots[int(np.argmin(prox_scores))])
 
         x[u] = chosen_slot
         unassigned[u] = False
 
-        # Update saturation degrees of unscheduled neighbours
-        unassigned_nbrs = nbrs[unassigned[nbrs]]
-        new_sat = unassigned_nbrs[~nbr_slot_used[unassigned_nbrs, chosen_slot]]
-        nbr_slot_used[new_sat, chosen_slot] = True
-        sat_deg[new_sat] += 1
+        nbrs = indices[indptr[u] : indptr[u + 1]]
+        wts = weights[indptr[u] : indptr[u + 1]]
+        newly_sat = nbrs[unassigned[nbrs] & (slot_table[nbrs, chosen_slot] == 0)]
+        sat_deg[newly_sat] += 1
+        slot_table[nbrs, chosen_slot] += wts
 
     if use_repair and violation_weight(inst, x) > 0.0:
         x = repair(inst, x, rng, max_passes=6)
@@ -174,12 +156,10 @@ class DsaturSolver(Solver):
         while not budget.exhausted and iteration < max_restarts:
             cand_x = dsatur_construct(inst, rng, slot_selection=slot_sel, use_repair=use_rep)
             v_val = violation_weight(inst, cand_x)
-            f_val = proximity_cost(inst, cand_x)
             budget.charge_full(1)
 
             if use_ls and not budget.exhausted:
-                cand_x, df, dv = move_ls(inst, cand_x, budget=budget, rng=rng, max_passes=3)
-                f_val += df
+                cand_x, _df, dv = move_ls(inst, cand_x, budget=budget, rng=rng, max_passes=3)
                 v_val += dv
 
             if v_val <= 1e-9:

@@ -51,13 +51,15 @@ class Tracker:
         elapsed = time.perf_counter() - self._start_time
 
         if force or evals_used >= self._next_checkpoint or evals_used >= self.max_evals:
-            self._history_records.append([
-                float(evals_used),
-                float(iteration),
-                float(best_f_so_far),
-                float(elapsed),
-                float(diversity),
-            ])
+            self._history_records.append(
+                [
+                    float(evals_used),
+                    float(iteration),
+                    float(best_f_so_far),
+                    float(elapsed),
+                    float(diversity),
+                ]
+            )
             self._next_checkpoint = evals_used + self.interval
 
     def to_array(self) -> np.ndarray:

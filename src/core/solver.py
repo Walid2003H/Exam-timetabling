@@ -6,9 +6,9 @@ and the abstract base class for all optimization algorithms in the project.
 
 from __future__ import annotations
 
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-import time
 from typing import Any
 
 import numpy as np
@@ -112,9 +112,7 @@ class Solver(ABC):
 
     name: str = "base_solver"
 
-    def __init__(
-        self, hparams: dict[str, Any] | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, hparams: dict[str, Any] | None = None, **kwargs: Any) -> None:
         """Initialize solver with hyperparameters passed as a dict or keyword args.
 
         Args:
