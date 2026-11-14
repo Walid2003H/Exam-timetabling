@@ -89,6 +89,11 @@ def move_ls(
                 if cand_slot == cur_slot:
                     continue
 
+                if budget is not None and inst.n_edges > 0:
+                    move_cost = float(inst.degree(exam_i)) / float(inst.n_edges)
+                    if not budget.can_afford(move_cost):
+                        break
+
                 df, dv = delta_move(inst, current_x, exam_i, cand_slot)
                 if budget is not None:
                     budget.charge_delta(inst, exam_i)

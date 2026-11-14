@@ -1,0 +1,25 @@
+instance: tune-medium
+seeds:
+- 0
+- 1
+- 2
+- 3
+- 4
+budget_fee: 300
+ga:
+  pop_size: 32
+  tournament_k: 3
+  crossover_rate: 0.88
+  mutation_rate: 0.03
+  elitism: 2
+pso:
+  swarm_size: 28
+  encoding: random_keys
+  decode_mode: priority_greedy
+aco:
+  num_ants: 25
+  alpha: 1.0
+  beta: 3.0
+  rho: 0.12
+  q0: 0.88
+  ls_top_k: 3

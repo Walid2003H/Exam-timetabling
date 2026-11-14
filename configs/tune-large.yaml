@@ -1,0 +1,25 @@
+instance: tune-large
+seeds:
+- 0
+- 1
+- 2
+- 3
+- 4
+budget_fee: 300
+ga:
+  pop_size: 40
+  tournament_k: 4
+  crossover_rate: 0.9
+  mutation_rate: 0.02
+  elitism: 3
+pso:
+  swarm_size: 35
+  encoding: random_keys
+  decode_mode: priority_greedy
+aco:
+  num_ants: 30
+  alpha: 1.1
+  beta: 3.2
+  rho: 0.1
+  q0: 0.9
+  ls_top_k: 3

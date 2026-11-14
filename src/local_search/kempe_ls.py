@@ -97,6 +97,11 @@ def apply_kempe_chain_step(
         return False, 0.0, 0.0
 
     chain = extract_kempe_chain(inst, x, seed_exam, s2)
+    if budget is not None and inst.n_edges > 0:
+        chain_cost = sum(float(inst.degree(u)) for u in chain) / float(inst.n_edges)
+        if not budget.can_afford(chain_cost):
+            return False, 0.0, 0.0
+
     in_chain = np.zeros(inst.n_exams, dtype=bool)
     in_chain[chain] = True
 
