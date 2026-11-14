@@ -440,7 +440,8 @@ class PSOSolver(Solver):
             improved_in_iter = False
 
             for k in range(swarm_size):
-                if budget.exhausted:
+                if budget.exhausted or not budget.can_afford(1.0):
+                    budget.mark_exhausted()
                     break
 
                 if encoding == "random_keys":

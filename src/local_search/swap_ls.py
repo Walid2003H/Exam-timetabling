@@ -47,6 +47,11 @@ def evaluate_swap_delta(
     if s_i == s_j or exam_i == exam_j:
         return 0.0, 0.0
 
+    if budget is not None and inst.n_edges > 0:
+        swap_cost = float(inst.degree(exam_i) + inst.degree(exam_j)) / float(inst.n_edges)
+        if not budget.can_afford(swap_cost):
+            return 0.0, 0.0
+
     # Step 1: move exam_i from s_i to s_j
     df1, dv1 = delta_move(inst, x, exam_i, s_j)
     if budget is not None:

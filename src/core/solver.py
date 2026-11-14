@@ -37,6 +37,7 @@ class Budget:
         self.max_evals = float(max_evals)
         self.max_seconds = float(max_seconds) if max_seconds is not None else None
         self._used_evals = 0.0
+        self._exhausted_early = False
         self._start_time = time.perf_counter()
 
     def charge_full(self, n: int = 1) -> None:
@@ -74,9 +75,22 @@ class Budget:
         return self._used_evals
 
     @property
+    def remaining(self) -> float:
+        """Return remaining FEE budget."""
+        return max(0.0, self.max_evals - self._used_evals)
+
+    def can_afford(self, cost: float) -> bool:
+        """Return True if `cost` FEE fits within remaining budget."""
+        return (self._used_evals + cost) <= self.max_evals + 1e-12
+
+    def mark_exhausted(self) -> None:
+        """Mark budget exhausted when remaining FEE cannot afford the next step."""
+        self._exhausted_early = True
+
+    @property
     def exhausted(self) -> bool:
         """Return True if either FEE budget or wall-clock limit has been reached."""
-        if self._used_evals >= self.max_evals:
+        if self._exhausted_early or self._used_evals >= self.max_evals - 1e-12:
             return True
         if self.max_seconds is not None:
             if (time.perf_counter() - self._start_time) >= self.max_seconds:
