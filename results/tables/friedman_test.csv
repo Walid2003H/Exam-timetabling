@@ -1,0 +1,2 @@
+n_instances,n_algorithms,statistic,p_value,significant,best_ranked_algorithm,best_average_rank
+12,9,36.3333,1.525667776372507e-05,True,pso_memetic,2.1667

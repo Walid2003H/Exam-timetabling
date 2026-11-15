@@ -1,3 +1,28 @@
-# Configuration template for 'aco_memetic' solver (to be populated by the phase owner)
-defaults: {}
-search_space: {}
+# Configuration for Memetic MAX-MIN Ant System solver 'aco_memetic' (P7)
+defaults:
+  n_ants: 14
+  alpha: 1.0
+  beta: 2.5
+  rho: 0.12
+  q0: 0.15
+  p_best: 0.05
+  gbest_deposit_freq: 2
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 12
+  smooth_factor: 0.35
+  use_local_search: true
+  ls_operator: hybrid
+  ls_top_k: 1
+  ls_max_passes: 1
+  ls_kempe_steps: 12
+  ls_swap_trials: 12
+
+search_space:
+  n_ants: [10, 14, 20]
+  alpha: [0.8, 1.0, 1.4]
+  beta: [2.0, 2.5, 3.5]
+  rho: [0.08, 0.12, 0.20]
+  ls_operator: [move, kempe, hybrid]
+  ls_kempe_steps: [10, 15, 25]

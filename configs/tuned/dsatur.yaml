@@ -1,0 +1,13 @@
+defaults:
+  slot_selection: min_proximity
+  use_repair: true
+  polish_with_move_ls: false
+  max_restarts: 200
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 30.015

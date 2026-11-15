@@ -1,0 +1,18 @@
+defaults:
+  initial_temp: 1.5
+  final_temp: 0.002
+  alpha: 0.96
+  epoch_length: 80
+  kempe_prob: 0.25
+  warm_starts: 3
+  reheat_factor: 1.8
+  stagnation_epochs: 35
+  penalty_weight: 1000.0
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 29.77

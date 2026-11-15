@@ -1,0 +1,52 @@
+# Master benchmark experiment configuration (P8 — Section 3.3 & 3.4)
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+pilot_seeds: [0, 1, 2, 3, 4]
+quick_seeds: [0, 1]
+
+use_tuned_configs: true
+
+# Fair evaluation budgets (FEE) by instance group:
+# Full target budgets vs practical pilot budgets for single-machine execution
+budgets_by_group:
+  tiny:
+    full_fee: 20000
+    pilot_fee: 300
+    quick_fee: 150
+  small:
+    full_fee: 50000
+    pilot_fee: 300
+    quick_fee: 80
+  medium:
+    full_fee: 200000
+    pilot_fee: 300
+    quick_fee: 60
+  large:
+    full_fee: 500000
+    pilot_fee: 80
+    quick_fee: 24
+
+algorithms:
+  - random
+  - dsatur
+  - sa
+  - exact
+  - ga
+  - ga_memetic
+  - pso
+  - pso_memetic
+  - aco
+  - aco_memetic
+
+instances:
+  - {name: "tiny-a", group: "tiny", path: "data/generated/tiny-a.npz"}
+  - {name: "tiny-b", group: "tiny", path: "data/generated/tiny-b.npz"}
+  - {name: "tiny-c", group: "tiny", path: "data/generated/tiny-c.npz"}
+  - {name: "small-a", group: "small", path: "data/generated/small-a.npz"}
+  - {name: "small-b", group: "small", path: "data/generated/small-b.npz"}
+  - {name: "small-c", group: "small", path: "data/generated/small-c.npz"}
+  - {name: "medium-a", group: "medium", path: "data/generated/medium-a.npz"}
+  - {name: "medium-b", group: "medium", path: "data/generated/medium-b.npz"}
+  - {name: "medium-c", group: "medium", path: "data/generated/medium-c.npz"}
+  - {name: "large-a", group: "large", path: "data/generated/large-a.npz"}
+  - {name: "large-b", group: "large", path: "data/generated/large-b.npz"}
+  - {name: "large-c", group: "large", path: "data/generated/large-c.npz"}

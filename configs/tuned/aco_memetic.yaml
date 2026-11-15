@@ -1,0 +1,27 @@
+defaults:
+  n_ants: 14
+  alpha: 1.0
+  beta: 2.5
+  rho: 0.12
+  q0: 0.15
+  p_best: 0.05
+  gbest_deposit_freq: 2
+  constraint_handling: repair
+  max_repair_passes: 3
+  penalty_weight: 1000.0
+  stagnation_iters: 12
+  smooth_factor: 0.35
+  use_local_search: true
+  ls_operator: hybrid
+  ls_top_k: 1
+  ls_max_passes: 1
+  ls_kempe_steps: 12
+  ls_swap_trials: 12
+tuning_metadata:
+  instance: tune-small
+  seeds:
+  - 1000
+  - 1001
+  budget_fee: 150.0
+  best_feasibility_rate: 1.0
+  best_mean_f: 29.6367
