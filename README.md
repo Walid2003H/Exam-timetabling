@@ -1,69 +1,95 @@
-# مشروع جدولة الامتحانات (Exam Timetabling Optimization)
+# مشروع جدولة الامتحانات الجامعية (Exam Timetabling Optimization)
 
-مقارنة بين الخوارزميات الذكية (GA و PSO و ACO) وخطوط الأساس (Random Search, DSATUR, Simulated Annealing, Branch & Bound) على مسألة جدولة الامتحانات الجامعية وفق صياغة Carter.
+تطبيق ومقارنة تجريبية بين الخوارزميات الذكية (**GA** و **PSO** و **ACO**) ونسخها الهجينة (**Memetic Algorithms**)، بالإضافة إلى خطوط الأساس (**Random Search**, **DSATUR**, **Simulated Annealing**, **Exact Branch & Bound**) لحل مسألة جدولة الامتحانات الجامعية وفق صياغة **Carter**[cite: 38].
 
+---
 
-## حالة المستودع الحالية
+## طريقة تشغيل الخوارزميات
 
-هذه نسخة تأسيسية من المشروع تركّز على العقد التقني المشترك واختبارات التحقق الأولية. تتضمن النسخة الحالية تمثيل مثيل المسألة، ودوال التقييم الأساسية، ومدير ميزانية FEE، وسجل التتبع، ومجموعة اختبارات للعقد. أما خوارزميات GA وPSO وACO، وخطوط الأساس، ومحلل بيانات Toronto، ومولّد المثيلات، وتشغيل التجارب وتحليل النتائج، فهي مهام موزعة على مراحل الفريق ولم تُنفّذ كلها في هذه النسخة. ملفات الإعدادات الفارغة هياكل أولية تنتظر تعبئتها من أصحاب المراحل.
+يمكن تشغيل المشروع وتجربة جميع الخوارزميات بإحدى طريقتين:
 
-في الحالة الحالية، يشغّل الأمر `./run_all.sh --quick` اختبارات العقد التقني فقط؛ ولا يعني نجاحه أن الخوارزميات أو خط التجارب الكامل أصبح جاهزاً. لا تُعرض نتائج أداء قبل تنفيذ الخوارزميات وتشغيل التجارب الموثقة.
+### الطريقة الأولى: التشغيل المباشر عبر Google Colab (موصى بها)
+لا تتطلب هذه الطريقة أي تثبيت على الجهاز؛ حيث يقوم دفتر العمل باستنساخ المستودع، وتثبيت المكتبات، وتشغيل الاختبارات، وتنفيذ الخوارزميات على جميع مجموعات البيانات تلقائياً:
 
-## فكرة المشروع
-لدينا $N$ امتحان و $T$ فترة زمنية و $S$ طالب مسجلين في عدة مواد. المطلوب إسناد كل امتحان إلى فترة زمنية بحيث لا يتعارض امتحانان يشترك فيهما طالب واحد في الفترة نفسها (قيد صلب)، مع مباعدة امتحانات الطالب الواحد قدر الإمكان لتقليل كلفة التقارب $f(x)$ (هدف ناعم).
+- **رابط التشغيل المباشر على Google Colab:**  
+  https://colab.research.google.com/drive/1p7etv_X4_jQOWhcI6i8vBHjCyBSvDu5K?usp=sharing
+- **ملف الدفتر المرفق:** `Exam_Timetabling_Execution.ipynb`
 
-تتم المقارنة بين جميع الخوارزميات باستخدام ميزانية تقييمات موحدة وعادلة (Full Evaluation Equivalent - FEE) بدلاً من عدد الأجيال أو التكرارات.
+**خطوات التشغيل:**
+1. افتح رابط Google Colab أعلاه (أو ارفع ملف `Exam_Timetabling_Execution.ipynb` المرفق إلى موقع [Google Colab](https://colab.research.google.com/)).
+2. من القائمة العلوية اختر **Runtime -> Run all** (أو شغّل الخلايا البرمجية بالترتيب من الأعلى إلى الأسفل).
+3. ستظهر في الخلايا الأخيرة جداول النتائج المقارنة (قيمة دالة الهدف `best_f`، نسبة الجدوى `Feasibility`، رصيد `FEE` المستهلك، وزمن التنفيذ)، يليها التحليل الإحصائي باختباري **Friedman** و **Wilcoxon-Holm**.
+
+---
+
+### الطريقة الثانية: التشغيل المحلي عبر سطر الأوامر (CLI)
+يتطلب التشغيل المحلي وجود **Python 3.10+**[cite: 38]:
+
+1. **استنساخ المستودع وتثبيت المكتبات:**
+   ```bash
+   git clone [https://github.com/Walid2003H/Exam-timetabling.git](https://github.com/Walid2003H/Exam-timetabling.git)
+   cd Exam-timetabling
+   pip install -r requirements.txt
+   ```
+
+2. **التحقق من سلامة الكود واختبارات الوحدة (42 اختباراً):**
+   ```bash
+   pytest tests/ -q
+   ```
+
+3. **تشغيل التجارب على مجموعات البيانات (`Tiny`, `Small`, `Medium`, `Large`):**
+   ```bash
+   # تشغيل التحقق السريع لجميع الخوارزميات على المسائل الـ 12
+   python -m experiments.run --mode quick
+
+   # تشغيل الوضع التجريبي المتوسط (5 بذور)
+   python -m experiments.run --mode pilot
+
+   # تشغيل التجربة الموسعة (30 بذرة)
+   python -m experiments.run --mode full
+
+   # أو تشغيل خط العمل الكامل (اختبارات + تجارب + تحليل إحصائي)
+   bash run_all.sh
+   ```
+
+4. **تشغيل خوارزمية محددة برمجياً (مثال بلغة Python):**
+   ```python
+   from src.core.instance import Instance
+   from src.core.budget import Budget
+   from src.algorithms.ga import solve_ga_memetic  # أو pso_memetic / aco_memetic
+
+   inst = Instance.load("data/generated/small-a.npz")
+   budget = Budget(max_fee=1500)
+   result = solve_ga_memetic(inst, budget=budget, seed=42)
+
+   print(f"Feasible: {result.feasible} | Cost f(x): {result.best_f:.4f} | FEE Used: {result.evals}")
+   ```
+
+---
+
+## فكرة المشروع ومنهجية التقييم
+لدينا $N$ امتحان و $T$ فترة زمنية و $S$ طالب مسجلين في عدة مواد. المطلوب إسناد كل امتحان إلى فترة زمنية بحيث لا يتعارض امتحانان يشترك فيهما طالب واحد في الفترة نفسها (**قيد صلب $V(x) = 0$**)، مع مباعدة امتحانات الطالب الواحد قدر الإمكان لتقليل كلفة التقارب $f(x)$ وفق أوزان Carter (**هدف ناعم**)[cite: 38].
+
+لضمان عدالة المقارنة بين الخوارزميات المختلفة، تعتمد المنظومة ميزانية تقييمات موحدة تُقاس بوحدة مكافئ التقييم الكامل (**Full Evaluation Equivalent - FEE**) بدلاً من تثبيت عدد الأجيال أو التكرارات، مع تسريع حسابات الرسم البياني عبر تمثيل **CSR** ومترجم **Numba JIT**[cite: 38].
+
+---
 
 ## هيكل المستودع
 ```text
-exam-timetabling/
-├── README.md
-├── CONTRIBUTIONS.md
-├── requirements.txt
-├── pyproject.toml
-├── Makefile
-├── run_all.sh
-├── configs/                # YAML configs for each solver (defaults + search_space)
-│   └── tuned/              # Tuned configs after hyperparameter tuning
-├── data/                   # instances.yaml, toronto/, generated/, checksums.txt
+Exam-timetabling/
+├── README.md               # دليل المشروع وطريقة التشغيل
+├── requirements.txt        # المكتبات المطلوبة للتشغيل
+├── pyproject.toml          # إعدادات المشروع وأدوات الفحص (pytest / ruff)
+├── run_all.sh              # سكربت التشغيل الشامل
+├── configs/                # ملفات إعدادات المعاملات لكل خوارزمية (YAML)
+├── data/                   # مسائل الاختبار التركيبية وبصمات التحقق SHA-256
 ├── src/
-│   ├── core/               # P3: instance, problem, solver (Budget, Result, Solver), tracker
-│   ├── data/               # P2: toronto parser, generator, stats, validate
-│   ├── baselines/          # P4: random_search, dsatur, sa, exact_bb
-│   ├── local_search/       # P4: move_ls, swap_ls, kempe_ls
-│   └── algorithms/         # P5/P6/P7: ga.py, pso.py, aco.py
-├── experiments/            # P8: run.py, tune.py, ablations.yaml, config.yaml
-├── analysis/               # P8/P9: stats.py, make_figures.py, style.py
-├── results/                # raw/, processed/, figures/, tables/
-├── tests/
-├── docs/
-└── report/
+│   ├── core/               # تمثيل CSR، دالة Carter، القيود، ومحاسبة ميزانية FEE
+│   ├── data/               # مولّد المسائل، قارئ بيانات Toronto، والتحقق من السلامة
+│   ├── baselines/          # Random Search, DSATUR, Simulated Annealing, Exact B&B
+│   ├── local_search/       # مشغلات البحث المحلي (Move, Swap, Kempe-chain, Hybrid)
+│   └── algorithms/         # الخوارزميات الأساسية والهجينة (GA, PSO, ACO)
+├── experiments/            # منفّذ التجارب الموحد (run.py) وضبط المعاملات (tune.py)
+├── analysis/               # الاختبارات الإحصائية (Friedman & Wilcoxon-Holm) والرسوم
+└── tests/                  # اختبارات الوحدة والتكامل (42 اختباراً)
 ```
-
-## إعداد البيئة والتشغيل
-تتوافق نسخ المكتبات المثبّتة حالياً مع Python 3.11 وPython 3.12:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Run tests
-pytest
-
-# Format and lint before opening a PR
-make format
-make lint
-```
-
-## قواعد العمل في Git للفريق
-1. الفروع الأساسية هي `main` (للنسخ المستقرة عند كل Gate) و `develop` (لدمج مراحل الفريق). ممنوع الـ push المباشر على `main` و `develop`.
-2. كل طالب ينشئ فرعاً خاصاً بمرحلته من `develop` بالصيغة:
-   `feature/p<رقم المرحلة>-<وصف>` (مثال: `feature/p2-data-generator`).
-3. قبل أول commit يجب ضبط الاسم الحقيقي والبريد ليظهر في `git shortlog -sn`:
-   ```bash
-   git config user.name "Your Name"
-   git config user.email "your.email@example.com"
-   ```
-4. عنوان الـ Pull Request يكون بالصيغة: `[P5] feat(ga): add tournament selection`، والدمج في `develop` يتم بطريقة **Squash and Merge** بعد موافقة المراجع المحدد في جدول الأدوار ومرور `pytest`.
-5. تفاصيل الصياغة الرياضية والتواقيع موجودة في [`docs/interface_contract.md`](docs/interface_contract.md).
